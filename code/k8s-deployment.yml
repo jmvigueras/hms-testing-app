@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotel-management-system
+  labels:
+    app: hms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hms
+  template:
+    metadata:
+      labels:
+        app: hms
+    spec:
+      containers:
+      - name: hms-container
+        image: jviguerasfortinet/hms-test-app:v1
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hms-service
+spec:
+  selector:
+    app: hms
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080  # Set the NodePort here (range: 30000-32767)
+  type: NodePort
