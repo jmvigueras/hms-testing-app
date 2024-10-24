@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mods and PHP module
 RUN a2enmod rewrite
 
+# Delete default index.html
+RUN rm /var/www/html/index.html
+
 # Copy application files to the container
 COPY . /var/www/html/
 
