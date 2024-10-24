@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     curl \
     default-mysql-client \
+    mysql-server \
     libzip-dev \
     libonig-dev \
     libpng-dev \
