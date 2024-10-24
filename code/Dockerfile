@@ -1,37 +1,23 @@
-# Base image
-FROM php:8.1-apache
+# Use an official Ubuntu base image
+FROM ubuntu:20.04
 
-# Install system dependencies
+# Set non-interactive mode for apt-get (prevents interaction prompts)
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package list and install Apache, MySQL, PHP, and other dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    vim \
-    curl \
-    default-mysql-client \
+    apache2 \
     mysql-server \
-    libzip-dev \
-    libonig-dev \
-    libpng-dev \
-    && docker-php-ext-install pdo_mysql \
-    && docker-php-ext-install mysqli
+    php \
+    libapache2-mod-php \
+    php-mysql \
+    && apt-get clean
 
-# Enable Apache mod_rewrite
+# Enable Apache mods and PHP module
 RUN a2enmod rewrite
 
-# Set up MySQL to start
-RUN service mysql start
-
-# Copy DB sql init DB
-COPY . /var/www/bluebirdhotel.sql
-
-# Set root password and create database
-RUN mysql -e "ALTER USER 'root'@'$DB_HOST' IDENTIFIED WITH '$DB_PASSWORD'' BY 'root';" && \
-    mysql -u root -p "$DB_PASSWORD" < /var/www/bluebirdhotel.sql
-
-# Set the working directory in the container
-WORKDIR /var/www/html
-
-# Copy the application code into the container
-COPY . /var/www/html
+# Copy application files to the container
+COPY . /var/www/html/
 
 # Set correct permissions for the application files
 RUN chown -R www-data:www-data /var/www/html && \
@@ -40,8 +26,12 @@ RUN chown -R www-data:www-data /var/www/html && \
 # Copy custom Apache virtual host configuration
 COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 
-# Expose port 80
+# Copy custom entrypoint script to handle MySQL initialization and service start
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose port 80 for Apache
 EXPOSE 80
 
-# Start Apache in the foreground
-CMD ["apache2-foreground"]
+# Start MySQL and Apache using the custom entrypoint script
+CMD ["docker-entrypoint.sh"]
